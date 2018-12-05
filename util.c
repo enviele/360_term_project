@@ -82,6 +82,7 @@ typedef struct oft
     MINODE *mptr;
     int offset;
 } OFT;
+
 typedef struct proc
 {
     struct Proc *next;
@@ -99,13 +100,19 @@ PROC proc[NPROC], *running;
 int get_block(int dev, int blk, char *buf)
 {
     lseek(dev, (long)blk * BLKSIZE, 0);
-    read(dev, buf, BLKSIZE);
+    n = read(dev, buf, BLKSIZE);
+    if (n < 0) {
+        printf("get_block(%d %d) error\n", dev, blk);
+    }
 }
 
 int put_block(int dev, int blk, char *buf)
 {
     lseek(dev, (long)blk * BLKSIZE, 0);
-    write(dev, buf, BLKSIZE);
+    n = write(dev, buf, BLKSIZE);
+    if (n < 0) {
+        printf("put_block(%d %d) error\n", dev, blk);
+    }
 }
 
 int i_count = 0, n = 0;
