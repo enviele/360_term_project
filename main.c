@@ -11,8 +11,30 @@
 */
 
 
+#include "type.h"
 #include "util.c"
-
+#include "alloc_dealloc.c"
+#include "pwd.c"
+#include "mkdir.c"
+#include "rmdir.c"
+#include "creat_file.c"
+#include "chmod_file.c"
+#include "touch_file.c"
+#include "mount_root.c"
+#include "link.c"
+#include "open.c"
+#include "close.c"
+#include "pfd.c"
+#include "symlink.c"
+#include "unlink.c"
+#include "stat.c"
+#include "cp.c"
+#include "mv.c"
+#include "lseek.c"
+#include "read.c"
+#include "write.c"
+#include "cat.c"
+#include "tests.c"
 
 char line[128], command[128], pathname[256];
 char *commands[] = {"ls", "pwd", "cd", "mkdir", "rmdir", "creat", "link", "symlink", "unlink", "chmod", "menu"};
