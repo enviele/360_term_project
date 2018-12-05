@@ -13,94 +13,13 @@
 
 
 /************** util.c file ****************/
-#include <stdio.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <ext2fs/ext2_fs.h>
-#include <string.h>
-#include <libgen.h>
-#include <sys/stat.h>
-
-
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef unsigned int u32;
-
-typedef struct ext2_group_desc_desc GD;
-typedef struct ext2_super_block SUPER;
-typedef struct ext2_inode INODE;
-typedef struct ext2_dir_entry_2 DIR;
-
-
-
-#define BLKSIZE 1024
-#define BLKOFFSET(block) (BLKSIZE + block-1)*BLKSIZE
-#define NMINODE 100
-#define NPROC 2
-#define NFD 10
-#define NOFT 40
 
 // #include "type.h"
-
-/**** globals defined in main.c file ****/
-
-extern MINODE minode[NMINODE];
-extern MINODE *root;
-extern PROC proc[NPROC], *running;
-extern char gpath[128];
-extern char *name[64];
-extern int n;
-extern int fd, dev;
-extern int nblocks, ninodes, bmap, imap, inode_start;
-extern char line[256], cmd[32], pathname[256];
-
-
-
-typedef struct minode
-{
-    INODE INODE;
-    int mptr;
-    int mountptr;
-    // disk inode
-    int dev, ino;
-    int refCount;
-    // use count
-    int dirty;
-    // modified flag
-    int mounted;
-    // mounted flag
-    struct mount *mntPtr;
-    // mount table pointer
-    // int lock;
-    // ignored for simple FS
-} MINODE;
-
-typedef struct oft
-{
-    int mode;
-    int refCount;
-    MINODE *mptr;
-    int offset;
-} OFT;
-
-typedef struct proc
-{
-    struct Proc *next;
-    int pid;
-    int uid;
-    int gid;
-    int ppid;
-    int status;
-    struct minode *cwd;
-    OFT *fd[NFD];
-} PROC;
-PROC proc[NPROC], *running;
-
 
 int get_block(int dev, int blk, char *buf)
 {
     lseek(dev, (long)blk * BLKSIZE, 0);
-    n = read(dev, buf, BLKSIZE);
+    int n = read(dev, buf, BLKSIZE);
     if (n < 0) {
         printf("get_block(%d %d) error\n", dev, blk);
     }
@@ -109,7 +28,7 @@ int get_block(int dev, int blk, char *buf)
 int put_block(int dev, int blk, char *buf)
 {
     lseek(dev, (long)blk * BLKSIZE, 0);
-    n = write(dev, buf, BLKSIZE);
+    int n = write(dev, buf, BLKSIZE);
     if (n < 0) {
         printf("put_block(%d %d) error\n", dev, blk);
     }
@@ -279,9 +198,9 @@ int search(MINODE *mip, char *name)
     }
     // name does not exist,  print error message
     printf("name %s does not exist\n", name);
-    strcpy(teststr, "name ");
-    strcat(teststr, name);
-    strcat(teststr, " does not exist.");
+    // strcpy(teststr, "name ");
+    // strcat(teststr, name);
+    // strcat(teststr, " does not exist.");
     return 0;
 }
 

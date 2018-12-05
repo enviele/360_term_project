@@ -13,48 +13,41 @@
 
 #include "type.h"
 #include "util.c"
-#include "alloc_dealloc.c"
-#include "pwd.c"
-#include "mkdir.c"
-#include "rmdir.c"
-#include "creat_file.c"
-#include "chmod_file.c"
-#include "touch_file.c"
-#include "mount_root.c"
-#include "link.c"
-#include "open.c"
-#include "close.c"
-#include "pfd.c"
-#include "symlink.c"
-#include "unlink.c"
-#include "stat.c"
-#include "cp.c"
-#include "mv.c"
-#include "lseek.c"
-#include "read.c"
-#include "write.c"
-#include "cat.c"
-#include "tests.c"
-
-char line[128], command[128], pathname[256];
-char *commands[] = {"ls", "pwd", "cd", "mkdir", "rmdir", "creat", "link", "symlink", "unlink", "chmod", "menu"};
-
-MINODE minode[NMINODE];
-MINODE *root;
+#include "my_ls.c"
+#include "my_chmod.c"
+#include "my_pwd.c"
+#include "my_unlink.c"
+#include "my_cd.c"
+#include "my_syslink.c"
+#include "my_link.c"
+#include "my_mkdir.c"
+#include "my_rmdir.c"
+#include "my_creat.c"
 
 
-PROC   proc[NPROC], *running;
-
-char gpath[128];   // hold tokenized strings
-char *name[64];    // token string pointers
-int  n;            // number of token strings 
-
-int  fd, dev;
-int  nblocks, ninodes, bmap, imap, inode_start;
-char line[128], cmd[32], pathname[64];
+char *commands[] = {"ls", "pwd", "cd", "mkdir", "rmdir", "creat", "link", "symlink", "unlink", "chmod", "menu", "quit"};
 
 
-int menu()
+// char gpath[128];   // hold tokenized strings
+// char *name[64];    // token string pointers
+// int  n;            // number of token strings 
+
+// int  fd, dev;
+// int  nblocks, ninodes, bmap, imap, inode_start;
+char line[128];
+
+int testing(char *pathname) {
+    //calling all of the functions from util.c to see if they work
+    
+}
+
+int quit(char *pathname) {
+    printf("\n\tQUITTING\n");
+    return -1;
+}
+
+
+int menu(char *pathname)
 {
     printf("*********************************\n");
     printf("************** MENU *************\n");
@@ -64,16 +57,19 @@ int menu()
 
     return 0;
 }
+int (*fptr[ ])(char *)={(int (*)())my_ls,my_pwd,my_cd,my_mkdir,my_rmdir,my_creat,my_link,my_syslink, my_unlink, my_chmod, menu, quit};
 
-int findCmd(command) {
+
+int findCmd(char command[]) {
     // cycle through commands stored in the commands[] array and return it's index
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 12; i++) {
         if (strcmp(command, commands[i]) == 0) {
             return i;
         }
     }
     return -1; // return -1 to run the default option
 }
+
 
 
 int main(int argc, char *argv[])
