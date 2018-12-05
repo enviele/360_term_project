@@ -139,34 +139,57 @@ MINODE *iget(int dev, int ino)
     int ipos = 0;
     int i = 0;
     int offset = 0;
-
+    char buf[1024];
+    INODE *ip = NULL;
+    MINODE *mip = malloc(sizeof(MINODE));
 
     // return minode pointer to loaded INODE
     // (1). Search minode[ ] for an existing entry (refCount > 0) with
     //   the needed (dev, ino):
     //   if found: inc its refCount by 1;
     //return pointer to this minode;
-
+    for (i = 0; i < NMINODE; i++) {
+        mip = &minode[i];
+        if(mip->dev == dev && mip->ino == ino) {
+            mip->refCount++;
+            printf("minode[%d]->refCount incremented\n", i);
+            return mip;
+        }
+    }
     //   (2). // needed entry not in memory:
     //       find a FREE minode(refCount = 0);
     //   Let mip->to this minode;
     //   set its refCount = 1;
     //   set its dev, ino
 
-    //            (3)
-    //                .load INODE of(dev, ino) into mip->INODE :
-
-    //   // get INODE of ino a char buf[BLKSIZE]
-    blk = (ino - 1) / 8 + inode_start;
+    //  mailmans algorithm:
+    ipos = (ino - 1) / 8 + inode_start;     // get INODE of ino a char buf[BLKSIZE]    
     offset = (ino - 1) % 8;
 
-    printf("iget: ino=%d blk=%d offset=%d\n", ino, blk, offset);
-
-    get_block(dev, blk, buf);
+    //  get the block
+    get_block(dev, ipos, buf);
+    // load inode
     ip = (INODE *)buf + offset;
-    mip->INODE = *ip; // copy INODE to mp->INODE
 
-    return mip;
+    for(i = 0; i < NMINODE; i++) {
+        mip = &minode[i];
+        printf("minode[%d].refCount = %d\n", i, minode[i].refCount);
+
+        if(!mip->refCount) {
+            printf("using minode[%d]\n", i);
+            mip->INODE = *ip;    // load INODE of(dev, ino) into mip->INODE
+            mip->dev = dev;
+            mip->ino;
+            mip->refCount++;
+
+            return mip;
+        }
+    }
+
+    //   (3)
+
+    //  get INODE of ino a char buf[BLKSIZE]
+
 }
 
 int iput(MINODE *mip) // dispose a used minode by mip
