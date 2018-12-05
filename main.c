@@ -1,9 +1,35 @@
+/**************************************
+ * CptS 360 Final Project
+ * 
+ * Main File
+ * 
+ * Programmers:
+ * Amariah Del Mar 11504395
+ * Elizabeth Viele
+ * 
+ * Last Modified: 12/4/18
+*/
+
+
 #include "util.c"
 
 
 char line[128], command[128], pathname[256];
 char *commands[] = {"ls", "pwd", "cd", "mkdir", "rmdir", "creat", "link", "symlink", "unlink", "chmod", "menu"};
 
+MINODE minode[NMINODE];
+MINODE *root;
+
+
+PROC   proc[NPROC], *running;
+
+char gpath[128];   // hold tokenized strings
+char *name[64];    // token string pointers
+int  n;            // number of token strings 
+
+int  fd, dev;
+int  nblocks, ninodes, bmap, imap, inode_start;
+char line[128], cmd[32], pathname[64];
 
 
 int menu()
