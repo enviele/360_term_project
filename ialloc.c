@@ -1,176 +1,162 @@
-/******* ialloc.c: allocate a free INODE, return its inode number ******/
-#include <stdio.h>
-#include "type.h"
+//Sets a bit using OR
+//Used in ialloc
+void set_bit(char *buf, int bit)
+{
+	int i, j;
+	i = bit / 8;
+	j = bit % 8;
+	buf[i] |= (1 << j);
+}
 
-/********** globals *************/
-int fd;
-int imap, bmap; // IMAP and BMAP block number
-int ninodes, nblocks, nfreeInodes, nfreeBlocks;
+//decrements the amount of free inodes on the device
+//This is used to ensure we dont use more inodes than we have room for.
+void decFreeInodes(int dev)
+{
+	char buf[BLKSIZE];
 
-// helper functions for ialloc from lab 6 prelab
-//
+	//dec free inodes count in SUPER and Group Descriptor block
+	get_block(dev, 1, buf);
+	sp = (SUPER *)buf;
+	sp->s_free_inodes_count--;
+	put_block(dev, 1, buf);
+
+	get_block(dev, 2, buf);
+	gp = (GD *)buf;
+	gp->bg_free_inodes_count--;
+	put_block(dev, 2, buf);
+}
 
 int tst_bit(char *buf, int bit)
 {
-    int i, j;
-    i = bit / 8;
-    j = bit % 8;
-    if (buf[i] & (1 << j))
-        return 1;
-    return 0;
+	int i, j;
+	i = bit / 8;
+	j = bit % 8;
+
+	if(buf[i] & (1 << j))
+		return 1;
+
+	return 0;
 }
 
-// sets a bit using OR, used in ialloc
-int set_bit(char *buf, int bit)
-{
-    int i, j;
-    i = bit / 8;
-    j = bit % 8;
-    buf[i] |= (1 << j);
-}
+//end of helper functions
 
-int clr_bit(char *buf, int bit)
-{
-    int i, j;
-    i = bit / 8;
-    j = bit % 8;
-    buf[i] &= ~(1 << j);
-}
-
-// decrements the amount of free inodes on the device
-// this is used to ensure we don't use more inodes than we have room for in the disk
-int decFreeInodes(int dev)
-{
-    char buf[BLKSIZE];
-
-    // dec free inodes count in SUPER and GD
-    get_block(dev, 1, buf);
-    sp = (SUPER *)buf;
-    sp->s_free_inodes_count--;
-    put_block(dev, 1, buf);
-
-    get_block(dev, 2, buf);
-    gp = (GD *)buf;
-    gp->bg_free_inodes_count--;
-    put_block(dev, 2, buf);
-}
-
-// end of helper functions
-
-// allocates a free inode number for writing
-// taken from lab6 and project help notes
-// this is usedby any writing functions that require new inodes
+//allocates a free inode number for writing
+//taken from lab 6 pre lab
+//This is used by any writing functions that require new inodes
 int ialloc(int dev)
 {
-    int i;
-    char buf[BLKSIZE];
+	int i;
+	char buf[BLKSIZE];
+	printf("imap is %d\n", imap);
 
-    // read inode_bitmap block
-    get_block(dev, imap, buf);
+	//read inode_bitmap block
+	get_block(dev, imap, buf);
 
-    for (i = 0; i < ninodes; i++)
-    {
-        if (tst_bit(buf, i) == 0)
-        {
-            set_bit(buf, i);
-            decFreeInodes(dev);
+	printf("inode count %d\n", ninodes);
+	for(i = 0; i < ninodes; i++)
+	{
+		if(tst_bit(buf, i) == 0)
+		{
+			set_bit(buf, i);
 
-            put_block(dev, imap, buf);
+			decFreeInodes(dev);
 
-            return i + 1;
-        }
-    }
-    printf("ialloc() Error: no more free inodes\n");
-    return 0;
+			put_block(dev, imap, buf);
+
+			return i + 1;
+		}
+	}
+	printf("ERROR: no more free inodes\n");
+	return 0;
 }
 
-//taken from prelab 6
-// allocates a free block so we can put stuff in it
+//allocates a free block so we can put stuff in it
 int balloc(int dev)
 {
-    int i;
-    char buf[BLKSIZE];
+	int i;
+	char buf[BLKSIZE];
+	printf("bmap is %d\n", bmap);
+	//read block_map block
+	get_block(dev, bmap, buf);
 
-    get_block(dev, bmap, buf);
+	for(i = 0; i < nblocks; i++)
+	{
+		if(tst_bit(buf, i) == 0)
+		{
+			set_bit(buf, i);
 
-    for (i = 0; i < ninodes; i++)
-    {
-        if (tst_bit(buf, i) == 0)
-        {
-            set_bit(buf, i);
-            decFreeInodes(dev);
+			decFreeInodes(dev);
 
-            put_block(dev, bmap, buf);
+			put_block(dev, bmap, buf);
 
-            return i + 1;
-        }
-    }
-    printf("ialloc() Error: no more free inodes\n");
-    return 0;
+			return i;
+		}
+	}
+	printf("ERROR: no more free blocks\n");
+	return 0;
 }
 
-// deallocates an inode for a given ino on the dev
-// this is used when we remove stuff
-// once deallocated we need to increment the free nodes in the SUPER and GD blocks
+//deallocates an inode for a given ino on the dev
+//This is used when we remove things
+//Once dealocated, we increment the free inodes in the SUPER and in the group descriptor
+int idealloc(int dev, int ino)
+{
+	char buf[1024];
+	int byte;
+	int bit;
 
-int idealloc(int dev, int ino) {
-    char buf[1024];
-    int byte, bit;
+	//clear bit(bmap, bno)
+	get_block(dev, imap, buf);
 
-    // clear bit(bmap, bno)
-    get_block(dev, imap, buf);
+	//Mailmans to where it is
+	byte = ino / 8;
+	bit = ino % 8;
 
-    // use mailman's algorithm to find where it is
-    byte = ino / 8;
-    bit = ino % 8;
+	//Negate it
+	buf[byte] &= ~(1 << bit);
 
-    // negate it
+	put_block(dev, imap, buf);
 
-    buf[byte] &= ~(1 << bit);
-    // put block back
-    put_block(dev, imap, buf);
+	//set free blocks
+	get_block(dev, 1, buf);
+	sp = (SUPER *)buf;
+	sp->s_free_blocks_count++;
+	put_block(dev, 1, buf);
 
-    // increment free blocks for SUPER
-    get_block(dev, 1, buf);
-    sp = (SUPER *)buf;
-    sp->s_free_blocks_count++;
-    put_block(dev, 1, buf);
-
-    //increment free blocks for GD
-    get_block(dev, 2, buf);
-    gp = (GD *) buf;
-    gp->bg_free_blocks_count++;
-    put_block(dev, 2, buf);
-
-}
-
-// deallocate a block
-// once we have deallocated the block we also need to increment the numberof free blocks in SUPER and GD
-
-int bdealloc(int dev, int bno) {
-    char buf[1024];
-    int byte, bit;
-
-    // clear bit(bmap, bno)
-    get_block(dev, bmap, buf);
-    byte = bno / 8;
-    bit = bno % 8;
-
-    buf[byte] &= ~(1 << bit);
-
-    put_block(dev, bmap, buf);
-
-    // increment free blocks for SUPER
-    get_block(dev, 1, buf);
-    sp = (SUPER *)buf;
-    sp->s_free_blocks_count++;
-    put_block(dev, 1, buf);
-
-    // increment free blocks for GD
 	get_block(dev, 2, buf);
 	gp = (GD *)buf;
 	gp->bg_free_blocks_count++;
-    put_block(dev, 2, buf);
+	put_block(dev, 2, buf);
+}
 
-    return 0;
+//deallocate a block
+//once deallocated we also increment the number of free blocks
+int bdealloc(int dev, int bno)
+{
+	char buf[1024];
+	int byte;
+	int bit;
+
+	//clear bit(bmap, bno)
+	get_block(dev, bmap, buf);
+
+	byte = bno / 8;
+	bit = bno % 8;
+
+	buf[byte] &= ~(1 << bit);
+
+	put_block(dev, bmap, buf);
+
+	//set free blocks
+	get_block(dev, 1, buf);
+	sp = (SUPER *)buf;
+	sp->s_free_blocks_count++;
+	put_block(dev, 1, buf);
+
+	get_block(dev, 2, buf);
+	gp = (GD *)buf;
+	gp->bg_free_blocks_count++;
+	put_block(dev, 2, buf);
+
+	return 0;
 }

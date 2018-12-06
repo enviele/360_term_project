@@ -23,6 +23,8 @@
 #include "my_syslink.c"
 #include "my_unlink.c"
 #include "mount_root.c"
+#include "my_ls.c"
+#include "my_cd.c"
 
 char *commands[] = {"ls", "pwd", "cd", "mkdir", "rmdir", "creat", "link", "symlink", "unlink", "chmod", "menu", "quit"};
 
@@ -32,7 +34,6 @@ int quit(char *pathname) {
     printf("\n\tQUITTING\n");
     return -1;
 }
-
 int menu()
 {
     printf("*********************************\n");
@@ -56,23 +57,22 @@ int findCmd(command) {
     return -1; // return -1 to run the default option
 }
 
-
+char *disk;
 int main(int argc, char *argv[])
 {
     int index, quitting = 0;
 
     if (argc < 2) {
-        printf("error: not enough arguments specified. exiting\n");
-        exit(0);
-    }
-    else if(argc > 2) {
-        printf("error: too many arguments specified. exiting\n");
-        exit(0);
+        disk = "mydisk";
     } 
-    mount_root(argv[1]);
+    else {
+        disk = argv[1];
+    }
     init();
+    mount_root(disk);
 
     while(!quitting) {
+        memset(pathname, 0, 256);
         printf("input a command:\t");
         fgets(line, 128, stdin);
         line[strlen(line)-1] = NULL; // get rid of NULL at the end
