@@ -25,8 +25,9 @@
 #include "mount_root.c"
 #include "my_ls.c"
 #include "my_cd.c"
+#include "my_stat.c"
 
-char *commands[] = {"ls", "pwd", "cd", "mkdir", "rmdir", "creat", "link", "symlink", "unlink", "chmod", "menu", "quit"};
+char *commands[] = {"ls", "pwd", "cd", "mkdir", "rmdir", "creat", "link", "symlink", "unlink", "chmod", "menu", "quit", "stat"};
 
 char line[128];
 
@@ -39,13 +40,13 @@ int menu()
     printf("*********************************\n");
     printf("************** MENU *************\n");
     printf("** ls pwd cd mkdir rmdir creat **\n");
-    printf("*** link syslink unlink chmod ***\n");
+    printf("*** link syslink unlink chmod stat***\n");
     printf("*********************************\n");
 
     return 0;
 }
 
-int(*fptr[])(char*) = {(int(*)())my_ls, my_pwd, my_cd, my_mkdir, my_rmdir, my_creat, my_link, my_syslink, my_unlink, my_chmod, menu, quit};
+int(*fptr[])(char*) = {(int(*)())my_ls, my_pwd, my_cd, my_mkdir, my_rmdir, my_creat, my_link, my_syslink, my_unlink, my_chmod, menu, quit, my_stat};
 
 int findCmd(command) {
     // cycle through commands stored in the commands[] array and return it's index
