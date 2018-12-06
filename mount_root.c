@@ -31,7 +31,7 @@ int mount_root(char device[64]) {
     char buf[BLKSIZE];
 
     //  
-    dev = open(device, O_RDWR);
+    dev = open(device, O_RDONLY);
 
     //checking if the open worked
     if (dev < 0) {
