@@ -122,6 +122,6 @@ char third[64];
 OFT OpenFileTable[NOFT];
 int fd, dev, n;
 int nblocks, ninodes, bmap, imap, inode_start, iblock;
-int inodeBeginBlock;
+int inode_start;
 char pathname[256], parameter[256], command[128];
 int DEBUG;

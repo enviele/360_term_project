@@ -20,15 +20,18 @@
 #include "my_creat.c"
 #include "my_chmod.c"
 #include "my_link.c"
-
 #include "my_syslink.c"
 #include "my_unlink.c"
-
+#include "mount_root.c"
 
 char *commands[] = {"ls", "pwd", "cd", "mkdir", "rmdir", "creat", "link", "symlink", "unlink", "chmod", "menu", "quit"};
 
 char line[128];
 
+int quit(char *pathname) {
+    printf("\n\tQUITTING\n");
+    return -1;
+}
 
 int menu()
 {
@@ -58,7 +61,6 @@ int main(int argc, char *argv[])
 {
     int index, quitting = 0;
 
-    //initialize();
     if (argc < 2) {
         printf("error: not enough arguments specified. exiting\n");
         exit(0);
@@ -69,6 +71,7 @@ int main(int argc, char *argv[])
     } 
     mount_root(argv[1]);
     init();
+
     while(!quitting) {
         printf("input a command:\t");
         fgets(line, 128, stdin);
