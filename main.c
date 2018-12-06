@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
         exit(0);
     }
     else if (argc > 2) {
-        printf("error: too many argument specified. exiting\n");
+        printf("error: too many arguments specified. exiting\n");
         exit(0);
     }
     else {
