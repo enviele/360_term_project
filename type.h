@@ -60,6 +60,10 @@ DIR *dp;
 #define NFD 10
 #define NOFT 50
 
+#define LINK 			0
+#define FILE 			1
+#define DIRECTORY		2
+
 // Open File Table
 typedef struct Oft
 {
