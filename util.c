@@ -206,12 +206,11 @@ int search(MINODE *mip, char *name)
 
 // retrun inode number of pathname
 
-int getino(char *pathname)
+int getino(MINODE *mip, char *pathname)
 {
     // SAME as LAB6 program: just return the pathname's ino;
     int ino = 0, i = 0, n = 0, inum, offset;
     char path[64], name[64][64], *temp, buf[1024];
-    MINODE *mip = NULL;
     //check if root
     if (!strcmp(pathname, "/")) {
         return 2;
