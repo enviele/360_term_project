@@ -1,4 +1,3 @@
-//#include "type.h"
 
 int ls_dir(MINODE *mip)
 {
@@ -8,7 +7,8 @@ int ls_dir(MINODE *mip)
     int entry_num, myino;
     MINODE *temp;
     char buf[BLKSIZE], temp_char[BLKSIZE];
-
+    int device = running->cwd->dev;
+    
     entry_num = inode->i_size / BLKSIZE; // how many blocks in inode
     for (int i = 0; i < entry_num; i++)
     {                                           // for each block in inode
@@ -39,63 +39,6 @@ int ls_dir(MINODE *mip)
     return 0;
 }
 
-int ls_file(MINODE *mip, char* path)
-{
-    // mip = iget(dev, ino);
-    int i, type;
-    INODE *ip = &mip->INODE;
-    struct stat fstat;
-
-    if (stat(path, &fstat) < 0)
-    {
-        return 1;
-    }
-    char *permissions = "rwxrwxrwx";
-
-    // grab information from the file
-    u16 mode = ip->i_mode;
-    u16 links = ip->i_links_count;
-    u16 uid = ip->i_uid;
-    u16 gid = ip->i_gid;
-    u32 size = ip->i_size;
-
-    // set time to current time
-    char *time = ctime((time_t *)&ip->i_mtime);
-    // remove \r from time
-
-    time[strlen(time) - 1] = 0; // set last char to 0
-
-    if ((mode & 0120000) == 0120000)
-    {
-        printf("l");
-        type = LINK;
-    }
-    else if ((mode & 0040000) == 0040000)
-    {
-        printf("d");
-        type = DIRECTORY;
-    }
-    else if ((mode & 0100000) == 0100000)
-    {
-        printf("-");
-        type = FILE;
-    }
-
-    // print the permissions
-    printf((fstat.st_mode & S_IRUSR) ? "r" : "-");
-    printf((fstat.st_mode & S_IWUSR) ? "w" : "-");
-    printf((fstat.st_mode & S_IXUSR) ? "x" : "-");
-    printf((fstat.st_mode & S_IRGRP) ? "r" : "-");
-    printf((fstat.st_mode & S_IWGRP) ? "w" : "-");
-    printf((fstat.st_mode & S_IXGRP) ? "x" : "-");
-    printf((fstat.st_mode & S_IROTH) ? "r" : "-");
-    printf((fstat.st_mode & S_IWOTH) ? "w" : "-");
-    printf((fstat.st_mode & S_IXOTH) ? "x" : "-");
-
-    printf(" %d %d %d %d %s %s\n", links, gid, uid, size, time, path);
-
-    return 0;
-}
 
 int my_ls(char *pathname)
 {
@@ -157,3 +100,90 @@ int my_ls(char *pathname)
     }
     return 0;
 }
+
+
+// // print information on a file
+void ls_file(MINODE *mip, char *namebuf)
+{
+	char *Time;
+	unsigned short mode;
+	int type;
+
+
+    
+	mode = mip->INODE.i_mode;
+	// print out info in the file in same format as ls -l in linux
+	// print the file type
+	if((mode & 0120000) == 0120000)
+	{
+		printf("l");
+		type = LINK;
+	}
+	else if((mode & 0040000) == 0040000)
+	{
+		printf("d");
+		type = DIRECTORY;
+	}
+	else if((mode & 0100000) == 0100000)
+	{
+		printf("-");
+		type = FILE;
+	}
+
+	// print the permissions
+	if((mode & (1 << 8)))
+		printf("r");
+	else
+		printf("-");
+	if((mode & (1 << 7)) )
+		printf("w");
+	else
+		printf("-");
+	if((mode & (1 << 6)) )
+		printf("x");
+	else
+		printf("-");
+
+	if((mode & (1 << 5)) )
+		printf("r");
+	else
+		printf("-");
+	if((mode & ( 1 << 4)) )
+		printf("w");
+	else
+		printf("-");
+	if((mode & (1 << 3)) )
+		printf("x");
+	else
+		printf("-");
+
+	if((mode & (1 << 2)) )
+		printf("r");
+	else
+		printf("-");
+	if((mode & (1 << 1)) )
+		printf("w");
+	else
+		printf("-");
+	if(mode & 1)
+		printf("x");
+	else
+		printf("-");
+    //     // print the permissions
+
+
+	// print the file info
+	printf(" %d %d %d %d", mip->INODE.i_links_count, mip->INODE.i_uid,mip->INODE.i_gid, mip->INODE.i_size);
+	Time = ctime(&(mip->INODE.i_mtime));
+	Time[strlen(Time) -1 ] = 0;
+	printf(" %s %s", Time, namebuf);
+
+	// if this is a symlink file, show the file it points to
+	if((mode & 0120000) == 0120000)
+		printf(" => %s\n",(char *)(mip->INODE.i_block));
+	else
+		printf("\n");
+
+	iput(mip); // cleanup
+} 
+
