@@ -127,5 +127,5 @@ OFT OpenFileTable[NOFT];
 int fd, dev, n;
 int nblocks, ninodes, bmap, imap, inode_start, iblock;
 int inode_start;
-char pathname[256], parameter[256], command[128];
+char pathname[256], parameter[256], command[128], option[256];
 int DEBUG;

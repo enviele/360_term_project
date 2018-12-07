@@ -171,7 +171,7 @@ void my_mkdir_function(MINODE *pmip, char *child_name)
 	MINODE *mip = iget(dev, ino);
 	INODE *ip = &mip->INODE;
 
-	char *cp, buf[1024];
+	char *cp, buf[BLKSIZE];
 	DIR *dp;
 
 	ip->i_mode = 0x41ED; // OR 040755: DIR type and permissions

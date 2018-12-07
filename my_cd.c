@@ -21,8 +21,8 @@ int my_cd(char *pathname) {
     ino = getino(mip, pathname);
     //if ino is zero, the file doesn't exist
     if (ino == 0) {
-        printf("error: pathname does not exist: exiting\n");
-        exit(0);
+        printf("error: pathname does not exist\n");
+        return 1;
     }
     //now set the new mip to the block from the ino
     move_node = iget(dev, ino);
@@ -37,8 +37,8 @@ int my_cd(char *pathname) {
         running->cwd = move_node;
     }
     else {
-        printf("error: cannot cd into non-dir. exiting\n");
-        exit(0);
+        printf("error: cannot cd into non-dir");
+        return 1;
     }
     return 0;
 }

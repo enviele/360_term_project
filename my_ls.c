@@ -1,4 +1,3 @@
-
 int ls_dir(MINODE *mip)
 {
     DIR *dir;
@@ -8,7 +7,7 @@ int ls_dir(MINODE *mip)
     MINODE *temp;
     char buf[BLKSIZE], temp_char[BLKSIZE];
     int device = running->cwd->dev;
-    
+
     entry_num = inode->i_size / BLKSIZE; // how many blocks in inode
     for (int i = 0; i < entry_num; i++)
     {                                           // for each block in inode
@@ -20,7 +19,7 @@ int ls_dir(MINODE *mip)
         {                                                 // goes through each entry in the directory
             strncpy(temp_char, dir->name, dir->name_len); // copy directory name into temp_char
             temp_char[dir->name_len] = 0;                 // get rid of \n
-            temp = iget(dev, dir->inode); // get the block and put it into temp
+            temp = iget(dev, dir->inode);                 // get the block and put it into temp
             if (temp)
             { // if you have the block, print out the file's contents
                 ls_file(temp, temp_char);
@@ -38,7 +37,6 @@ int ls_dir(MINODE *mip)
     printf("\n");
     return 0;
 }
-
 
 int my_ls(char *pathname)
 {
@@ -101,89 +99,94 @@ int my_ls(char *pathname)
     return 0;
 }
 
-
 // // print information on a file
 void ls_file(MINODE *mip, char *namebuf)
 {
-	char *Time;
-	unsigned short mode;
-	int type;
+    char *Time;
+    unsigned short mode;
+    int type;
+    struct stat fstat;
+    stat(namebuf, &fstat);
 
+    mode = mip->INODE.i_mode;
+    // print out info in the file in same format as ls -l in linux
+    // print the file type
+    if ((mode & 0120000) == 0120000)
+    {
+        printf("l");
+        type = LINK;
+    }
+    else if ((mode & 0040000) == 0040000)
+    {
+        printf("d");
+        type = DIRECTORY;
+    }
+    else if ((mode & 0100000) == 0100000)
+    {
+        printf("-");
+        type = FILE;
+    }
 
-    
-	mode = mip->INODE.i_mode;
-	// print out info in the file in same format as ls -l in linux
-	// print the file type
-	if((mode & 0120000) == 0120000)
-	{
-		printf("l");
-		type = LINK;
-	}
-	else if((mode & 0040000) == 0040000)
-	{
-		printf("d");
-		type = DIRECTORY;
-	}
-	else if((mode & 0100000) == 0100000)
-	{
-		printf("-");
-		type = FILE;
-	}
+    // print the permissions
+    if ((mode & (1 << 8)))
+        printf("r");
+    else
+        printf("-");
+    if ((mode & (1 << 7)))
+        printf("w");
+    else
+        printf("-");
+    if ((mode & (1 << 6)))
+        printf("x");
+    else
+        printf("-");
 
-	// print the permissions
-	if((mode & (1 << 8)))
-		printf("r");
-	else
-		printf("-");
-	if((mode & (1 << 7)) )
-		printf("w");
-	else
-		printf("-");
-	if((mode & (1 << 6)) )
-		printf("x");
-	else
-		printf("-");
+    if ((mode & (1 << 5)))
+        printf("r");
+    else
+        printf("-");
+    if ((mode & (1 << 4)))
+        printf("w");
+    else
+        printf("-");
+    if ((mode & (1 << 3)))
+        printf("x");
+    else
+        printf("-");
 
-	if((mode & (1 << 5)) )
-		printf("r");
-	else
-		printf("-");
-	if((mode & ( 1 << 4)) )
-		printf("w");
-	else
-		printf("-");
-	if((mode & (1 << 3)) )
-		printf("x");
-	else
-		printf("-");
-
-	if((mode & (1 << 2)) )
-		printf("r");
-	else
-		printf("-");
-	if((mode & (1 << 1)) )
-		printf("w");
-	else
-		printf("-");
-	if(mode & 1)
-		printf("x");
-	else
-		printf("-");
+    if ((mode & (1 << 2)))
+        printf("r");
+    else
+        printf("-");
+    if ((mode & (1 << 1)))
+        printf("w");
+    else
+        printf("-");
+    if (mode & 1)
+        printf("x");
+    else
+        printf("-");
     //     // print the permissions
 
+    // print the file info
+    printf(" %d %d %d %d", mip->INODE.i_links_count, mip->INODE.i_uid, mip->INODE.i_gid, mip->INODE.i_size);
+    Time = ctime(&(mip->INODE.i_mtime));
+    Time[strlen(Time) - 1] = 0;
+    printf(" %s %s", Time, namebuf);
 
-	// print the file info
-	printf(" %d %d %d %d", mip->INODE.i_links_count, mip->INODE.i_uid,mip->INODE.i_gid, mip->INODE.i_size);
-	Time = ctime(&(mip->INODE.i_mtime));
-	Time[strlen(Time) -1 ] = 0;
-	printf(" %s %s", Time, namebuf);
+    // if this is a symlink file, show the file it points to
+    if ((mode & 0120000) == 0120000)
+    {
+        printf(" => ");
+        for (int j = 0; mip->INODE.i_block[j]; j++)
+        {
+            printf("%c", mip->INODE.i_block[j]);
+        }
+        printf("\n");
 
-	// if this is a symlink file, show the file it points to
-	if((mode & 0120000) == 0120000)
-		printf(" => %s\n",(char *)(mip->INODE.i_block));
-	else
-		printf("\n");
+    }
+    else
+        printf("\n");
 
-	iput(mip); // cleanup
-} 
-
+    iput(mip); // cleanup
+}

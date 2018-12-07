@@ -188,6 +188,7 @@ int search(MINODE *mip, char *name)
 
 			while(cp < buf + BLKSIZE)
 			{
+				memset(dir_name, 0, 64);
 				//null terminate dp->name for strcmp
 				if(dp->name_len < 64)
 				{

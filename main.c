@@ -10,7 +10,6 @@
  * Last Modified: 12/4/18
 */
 
-
 #include "type.h"
 #include "util.c"
 #include "ialloc.c"
@@ -20,18 +19,20 @@
 #include "my_creat.c"
 #include "my_chmod.c"
 #include "my_link.c"
-#include "my_syslink.c"
+#include "my_symlink.c"
 #include "my_unlink.c"
 #include "mount_root.c"
 #include "my_ls.c"
 #include "my_cd.c"
+#include "my_touch.c"
 #include "my_stat.c"
 
-char *commands[] = {"ls", "pwd", "cd", "mkdir", "rmdir", "creat", "link", "symlink", "unlink", "chmod", "menu", "quit", "stat"};
+char *commands[] = {"ls", "pwd", "cd", "mkdir", "rmdir", "creat", "link", "symlink", "unlink", "chmod", "menu", "quit", "stat", "touch"};
 
 char line[128];
 
-int quit(char *pathname) {
+int quit(char *pathname)
+{
     printf("\n\tQUITTING\n");
     return -1;
 }
@@ -46,12 +47,15 @@ int menu()
     return 0;
 }
 
-int(*fptr[])(char*) = {(int(*)())my_ls, my_pwd, my_cd, my_mkdir, my_rmdir, my_creat, my_link, my_syslink, my_unlink, my_chmod, menu, quit, my_stat};
+int (*fptr[])(char *) = {(int (*)())my_ls, my_pwd, my_cd, my_mkdir, my_rmdir, my_creat, my_link, my_symlink, my_unlink, my_chmod, menu, quit, my_stat, my_touch};
 
-int findCmd(command) {
+int findCmd(command)
+{
     // cycle through commands stored in the commands[] array and return it's index
-    for (int i = 0; i < 12; i++) {
-        if (strcmp(command, commands[i]) == 0) {
+    for (int i = 0; i < 14; i++)
+    {
+        if (strcmp(command, commands[i]) == 0)
+        {
             return i;
         }
     }
@@ -63,28 +67,43 @@ int main(int argc, char *argv[])
 {
     int index, quitting = 0;
 
-    if (argc < 2) {
+    if (argc < 2)
+    {
         disk = "mydisk";
-    } 
-    else {
+    }
+    else
+    {
         disk = argv[1];
     }
     init();
     mount_root(disk);
 
-    while(!quitting) {
+    while (!quitting)
+    {
         memset(pathname, 0, 256);
         printf("input a command:\t");
         fgets(line, 128, stdin);
-        line[strlen(line)-1] = NULL; // get rid of NULL at the end
-        sscanf(line, "%s %s", command, pathname);
-        index = findCmd(command);
-        if (index != -1) {
-            quitting = fptr[index](pathname);
-        } else {
-            printf("invalid command %s\n", command);
+        line[strlen(line) - 1] = NULL; // get rid of NULL at the end
+        sscanf(line, "%s %s %s", command, pathname, option);
+        if (!strcmp(command, "chmod"))
+            my_chmod(pathname, option);
+        else if (!strcmp(command, "link"))
+            my_link(pathname, option);
+        else if (!strcmp(command, "symlink"))
+            my_symlink(pathname, option);
+        else
+        {
+            index = findCmd(command);
+            if (index != -1)
+            {
+                quitting = fptr[index](pathname);
+            }
+            else
+            {
+                printf("invalid command %s\n", command);
+            }
         }
     }
-    
+
     return 0;
 }
